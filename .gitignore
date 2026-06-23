@@ -1,64 +1,54 @@
-# ==========================================
-# Contenido de un .gitignore para Proyectos
-# ==========================================
+# ──────────────────────────────────────────────
+#  .gitignore para Proyecto .NET (Blazor + EF)
+# ──────────────────────────────────────────────
 
-# 1. Ejecutables y Archivos Compilados (Basura Binaria)
-# Ignora cualquier archivo que termine en estas extensiones 
-*.o
-*.out
-*.exe
-*.dll
-
-# 2. Directorios de compilación
-# Ignora carpetas enteras de salida de compilación 
-build/
+# ── Directorios de compilación ──
 bin/
 obj/
+[Dd]ebug/
+[Rr]elease/
+packages/
 
-# 2.1. Objetos, librerías y compilados extra de C/C++
-*.obj
-*.ko
-*.a
-*.la
-*.lo
-*.lib
-*.so
-*.so.*
-*.dylib
+# ── Archivos de usuario del IDE ──
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.rsuser
+*.code-workspace
 
-# 2.2. Ejecutables y depuración
-*.app
-*.i*86
-*.x86_64
-*.hex
-*.gch
-*.pch
-*.dSYM/
-*.stackdump
+# ── NuGet ──
+*.nupkg
+*.nuget.props
+*.nuget.targets
 
-# 2.3. CMake / Make
-CMakeCache.txt
-CMakeFiles/
-cmake_install.cmake
-Makefile
-compile_commands.json
+# ── Resultados de pruebas ──
+[Tt]est[Rr]esult*
+[Bb]uild[Ss]cript/
+[Tt]est[Cc]overage/
+*.trx
+*.coverage
 
-# 3. Archivos de Entorno y Variables Secretas (¡Seguridad!)
-# Evita fugas de contraseñas y credenciales 
-.env
-*.env.local
-
-# 4. Logs e Historiales generados por ejecución
-# Archivos de registro que solo ocupan espacio innecesario 
+# ── Logs ──
 *.log
 logs/
 
-# 5. Configuraciones locales del editor (VS Code)
-# Evita imponer tus preferencias de colores o fuente al equipo 
-.vscode/
-.code-workspace
+# ── Entorno y secretos ──
+.env
+*.env.local
 
-# 6. Archivos ocultos del Sistema Operativo
-# Basura generada automáticamente por Windows o macOS 
+# ── Cache de EF / Migraciones temporales ──
+__azurite_db*__.json
+__blobstorage*__
+__queuestorage*__
+
+# ── Sistema operativo ──
 Thumbs.db
 .DS_Store
+
+# ── Otros archivos generados ──
+*.pyc
+*.pyo
+__pycache__/
