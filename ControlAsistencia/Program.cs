@@ -1,6 +1,15 @@
 using ControlAsistencia.Components;
 using ControlAsistencia.Data;
+using ControlAsistencia.Middleware;
 using Microsoft.EntityFrameworkCore;
+
+var loggerFactory = LoggerFactory.Create(logging =>
+{
+    logging.ClearProviders();
+    logging.AddConsole();
+    logging.AddDebug();
+    logging.SetMinimumLevel(LogLevel.Information);
+});
 
 var builder = WebApplication.CreateBuilder(args);
 
