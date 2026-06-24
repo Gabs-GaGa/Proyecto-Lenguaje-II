@@ -27,9 +27,9 @@ builder.Services.AddDbContextFactory<AppDbContext>(options =>
             maxRetryDelay: TimeSpan.FromSeconds(10),
             errorCodesToAdd: null))
     .EnableSensitiveDataLogging(builder.Environment.IsDevelopment()));
+
 builder.Services.AddHealthChecks()
-    .AddNpgsql(
-        connectionString!,
+    .AddDbContextCheck<AppDbContext>(
         name: "postgresql",
         tags: ["db", "ready"]);
 
@@ -49,7 +49,7 @@ app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 
-app.UseAntiforgery();
+app.UseAntiforgery();   
 
 app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
 {
