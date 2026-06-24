@@ -20,6 +20,7 @@ builder.Services.AddDbContextFactory<AppDbContext>(options =>
     .EnableSensitiveDataLogging(builder.Environment.IsDevelopment()));
 
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
+builder.Services.AddScoped<IProveedorService, ProveedorService>();
 
 var app = builder.Build();
 
