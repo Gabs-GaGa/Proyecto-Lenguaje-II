@@ -1,4 +1,4 @@
-namespace ControlAsistencia.Models;
+namespace ControlInventario.Models;
 
 public class Producto
 {

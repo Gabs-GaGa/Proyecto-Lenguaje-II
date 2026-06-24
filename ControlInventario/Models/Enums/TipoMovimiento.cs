@@ -1,4 +1,4 @@
-namespace ControlAsistencia.Models.Enums;
+namespace ControlInventario.Models.Enums;
 
 public enum TipoMovimiento
 {

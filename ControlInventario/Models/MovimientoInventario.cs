@@ -1,6 +1,6 @@
-using ControlAsistencia.Models.Enums;
+using ControlInventario.Models.Enums;
 
-namespace ControlAsistencia.Models;
+namespace ControlInventario.Models;
 
 public class MovimientoInventario
 {

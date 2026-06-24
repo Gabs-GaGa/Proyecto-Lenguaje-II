@@ -1,5 +1,5 @@
-using ControlAsistencia.Components;
-using ControlAsistencia.Data;
+using ControlInventario.Components;
+using ControlInventario.Data;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);

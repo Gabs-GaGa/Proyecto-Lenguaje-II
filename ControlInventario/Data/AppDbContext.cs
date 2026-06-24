@@ -1,7 +1,7 @@
-using ControlAsistencia.Models;
+using ControlInventario.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace ControlAsistencia.Data;
+namespace ControlInventario.Data;
 
 public class AppDbContext : DbContext
 {

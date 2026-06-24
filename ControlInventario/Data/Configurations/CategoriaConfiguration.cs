@@ -1,8 +1,8 @@
-using ControlAsistencia.Models;
+using ControlInventario.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace ControlAsistencia.Data.Configurations;
+namespace ControlInventario.Data.Configurations;
 
 public class CategoriaConfiguration : IEntityTypeConfiguration<Categoria>
 {
