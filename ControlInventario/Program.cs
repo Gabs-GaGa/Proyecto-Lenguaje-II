@@ -1,5 +1,6 @@
 using ControlInventario.Components;
 using ControlInventario.Data;
+using ControlInventario.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +18,8 @@ builder.Services.AddDbContextFactory<AppDbContext>(options =>
             maxRetryDelay: TimeSpan.FromSeconds(10),
             errorCodesToAdd: null))
     .EnableSensitiveDataLogging(builder.Environment.IsDevelopment()));
+
+builder.Services.AddScoped<ICategoriaService, CategoriaService>();
 
 var app = builder.Build();
 
