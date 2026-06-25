@@ -1,0 +1,97 @@
+@page "/productos"
+
+<PageTitle>Productos - SGI Inventario</PageTitle>
+
+<div class="row">
+    <div class="col-12">
+        <!-- Tarjeta de Gestión de Productos (Diseño Premium AdminLTE 4) -->
+        <div class="card card-primary card-outline mb-4 shadow-sm">
+            <div class="card-header d-flex align-items-center justify-content-between py-3 bg-white">
+                <h5 class="card-title m-0 fw-bold text-primary">
+                    <i class="bi bi-box-seam me-2"></i>Gestión de Productos
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <!-- Tabla Responsiva de Productos -->
+                <table class="table table-bordered table-striped align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th style="width: 80px" class="text-center">ID</th>
+                            <th>Código SKU</th>
+                            <th>Nombre</th>
+                            <th class="text-end">Precio Venta</th>
+                            <th class="text-center">Stock Actual</th>
+                            <th>Categoría</th>
+                            <th style="width: 150px" class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ProductosList == null)
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-secondary">
+                                    <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                    Cargando productos...
+                                </td>
+                            </tr>
+                        }
+                        else if (!ProductosList.Any())
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    <i class="bi bi-info-circle me-1"></i> No se encontraron productos registrados.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var prod in ProductosList)
+                            {
+                                <tr>
+                                    <td class="text-center fw-semibold">@prod.Id</td>
+                                    <td class="fw-mono text-dark">@prod.Sku</td>
+                                    <td class="fw-medium text-dark">@prod.Nombre</td>
+                                    <td class="text-end fw-semibold text-secondary">@prod.PrecioVenta.ToString("C2")</td>
+                                    <td class="text-center">
+                                        <span class="badge @(prod.StockActual <= 5 ? "bg-danger" : "bg-success") px-2 py-1.5 fs-7">
+                                            @prod.StockActual
+                                        </span>
+                                    </td>
+                                    <td class="text-secondary">@prod.Categoria</td>
+                                    <td class="text-center">
+                                        <!-- Botones de Acción -->
+                                        <button class="btn btn-sm btn-outline-warning me-1" @onclick='() => Console.WriteLine("Editar Producto: " + prod.Id)' title="Editar">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" @onclick='() => Console.WriteLine("Eliminar Producto: " + prod.Id)' title="Eliminar">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<ProductoDto> ProductosList = new()
+    {
+        new ProductoDto { Id = 1, Sku = "LAP-DELL-15", Nombre = "Laptop Dell Inspiron 15", PrecioVenta = 749.99m, StockActual = 12, Categoria = "Tecnología" },
+        new ProductoDto { Id = 2, Sku = "MOU-LOGI-M1", Nombre = "Mouse Inalámbrico Logitech M185", PrecioVenta = 19.99m, StockActual = 4, Categoria = "Accesorios" },
+        new ProductoDto { Id = 3, Sku = "KEY-MECH-RGB", Nombre = "Teclado Mecánico RGB Redragon", PrecioVenta = 49.50m, StockActual = 25, Categoria = "Accesorios" }
+    };
+
+    public class ProductoDto
+    {
+        public int Id { get; set; }
+        public string Sku { get; set; } = string.Empty;
+        public string Nombre { get; set; } = string.Empty;
+        public decimal PrecioVenta { get; set; }
+        public int StockActual { get; set; }
+        public string Categoria { get; set; } = string.Empty;
+    }
+}

@@ -1,0 +1,108 @@
+@page "/movimientos"
+
+<PageTitle>Movimientos - SGI Inventario</PageTitle>
+
+<div class="row">
+    <div class="col-12">
+        <!-- Tarjeta de Gestión de Movimientos (Diseño Premium AdminLTE 4) -->
+        <div class="card card-primary card-outline mb-4 shadow-sm">
+            <div class="card-header d-flex align-items-center justify-content-between py-3 bg-white">
+                <h5 class="card-title m-0 fw-bold text-primary">
+                    <i class="bi bi-arrow-left-right me-2"></i>Historial de Movimientos
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <!-- Tabla Responsiva de Movimientos -->
+                <table class="table table-bordered table-striped align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th style="width: 80px" class="text-center">ID</th>
+                            <th>Producto</th>
+                            <th class="text-center" style="width: 140px">Tipo</th>
+                            <th class="text-center" style="width: 100px">Cantidad</th>
+                            <th>Fecha</th>
+                            <th>Motivo</th>
+                            <th style="width: 150px" class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (MovimientosList == null)
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-secondary">
+                                    <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                    Cargando movimientos...
+                                </td>
+                            </tr>
+                        }
+                        else if (!MovimientosList.Any())
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    <i class="bi bi-info-circle me-1"></i> No se encontraron movimientos registrados.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var mov in MovimientosList)
+                            {
+                                <tr>
+                                    <td class="text-center fw-semibold">@mov.Id</td>
+                                    <td class="fw-medium text-dark">@mov.Producto</td>
+                                    <td class="text-center">
+                                        <span class="badge @GetTipoBadgeClass(mov.Tipo) px-2.5 py-1.5 fs-7">
+                                            @mov.Tipo
+                                        </span>
+                                    </td>
+                                    <td class="text-center fw-bold text-dark">@mov.Cantidad</td>
+                                    <td class="text-secondary">@mov.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td class="text-secondary text-truncate" style="max-width: 250px;">@mov.Motivo</td>
+                                    <td class="text-center">
+                                        <!-- Botones de Acción -->
+                                        <button class="btn btn-sm btn-outline-warning me-1" @onclick='() => Console.WriteLine("Editar Movimiento: " + mov.Id)' title="Editar">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" @onclick='() => Console.WriteLine("Eliminar Movimiento: " + mov.Id)' title="Eliminar">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<MovimientoDto> MovimientosList = new()
+    {
+        new MovimientoDto { Id = 1, Producto = "Laptop Dell Inspiron 15", Tipo = "Entrada", Cantidad = 10, Fecha = DateTime.Now.AddHours(-2), Motivo = "Recepción de compra inicial de lote" },
+        new MovimientoDto { Id = 2, Producto = "Mouse Inalámbrico Logitech M185", Tipo = "Salida", Cantidad = 2, Fecha = DateTime.Now.AddHours(-1), Motivo = "Venta directa a cliente en tienda" },
+        new MovimientoDto { Id = 3, Producto = "Teclado Mecánico RGB Redragon", Tipo = "Ajuste", Cantidad = -1, Fecha = DateTime.Now.AddMinutes(-15), Motivo = "Corrección por inventario físico dañado" }
+    };
+
+    private string GetTipoBadgeClass(string tipo)
+    {
+        return tipo switch
+        {
+            "Entrada" => "bg-success",
+            "Salida" => "bg-danger",
+            "Ajuste" => "bg-warning text-dark",
+            _ => "bg-secondary"
+        };
+    }
+
+    public class MovimientoDto
+    {
+        public int Id { get; set; }
+        public string Producto { get; set; } = string.Empty;
+        public string Tipo { get; set; } = string.Empty; // Entrada, Salida, Ajuste
+        public int Cantidad { get; set; }
+        public DateTime Fecha { get; set; }
+        public string Motivo { get; set; } = string.Empty;
+    }
+}

@@ -1,0 +1,107 @@
+@page "/"
+
+<PageTitle>Dashboard - SGI Inventario</PageTitle>
+
+<!-- Mensaje de Bienvenida -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="p-5 bg-white rounded-3 shadow-sm border-start border-primary border-5">
+            <h1 class="display-5 fw-bold text-dark mb-2">Bienvenido al Sistema de Inventario</h1>
+            <p class="col-md-8 fs-5 text-secondary">
+                Gestión integral de categorías, proveedores, productos y movimientos de inventario en tiempo real.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Grid de KPIs (Widgets de AdminLTE 4) -->
+<div class="row mb-4">
+    <!-- Total Productos -->
+    <div class="col-lg-3 col-6 mb-3">
+        <div class="small-box text-bg-primary shadow-sm h-100 position-relative rounded-3 p-3">
+            <div class="inner">
+                <h3 class="fw-bold mb-1">150</h3>
+                <p class="mb-3 text-white-50">Total Productos</p>
+            </div>
+            <div class="icon position-absolute top-50 end-0 translate-middle-y me-3 opacity-25">
+                <i class="bi bi-box-seam fs-1 text-white"></i>
+            </div>
+            <a href="/productos" class="small-box-footer d-block text-white text-decoration-none mt-2 fs-7 text-center">
+                Ver Listado <i class="bi bi-arrow-right-circle-fill ms-1"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Total Categorías -->
+    <div class="col-lg-3 col-6 mb-3">
+        <div class="small-box text-bg-success shadow-sm h-100 position-relative rounded-3 p-3">
+            <div class="inner">
+                <h3 class="fw-bold mb-1">10</h3>
+                <p class="mb-3 text-white-50">Total Categorías</p>
+            </div>
+            <div class="icon position-absolute top-50 end-0 translate-middle-y me-3 opacity-25">
+                <i class="bi bi-tags fs-1 text-white"></i>
+            </div>
+            <a href="/categorias" class="small-box-footer d-block text-white text-decoration-none mt-2 fs-7 text-center">
+                Ver Listado <i class="bi bi-arrow-right-circle-fill ms-1"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Stock Bajo -->
+    <div class="col-lg-3 col-6 mb-3">
+        <div class="small-box text-bg-danger shadow-sm h-100 position-relative rounded-3 p-3">
+            <div class="inner">
+                <h3 class="fw-bold mb-1">5</h3>
+                <p class="mb-3 text-white-50">Stock Bajo</p>
+            </div>
+            <div class="icon position-absolute top-50 end-0 translate-middle-y me-3 opacity-25">
+                <i class="bi bi-exclamation-triangle fs-1 text-white"></i>
+            </div>
+            <a href="/productos" class="small-box-footer d-block text-white text-decoration-none mt-2 fs-7 text-center">
+                Ver Alertas <i class="bi bi-arrow-right-circle-fill ms-1"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Movimientos Hoy -->
+    <div class="col-lg-3 col-6 mb-3">
+        <div class="small-box text-bg-warning shadow-sm h-100 position-relative rounded-3 p-3">
+            <div class="inner text-dark">
+                <h3 class="fw-bold mb-1 text-dark">3</h3>
+                <p class="mb-3 text-dark text-opacity-75">Movimientos Hoy</p>
+            </div>
+            <div class="icon position-absolute top-50 end-0 translate-middle-y me-3 opacity-25">
+                <i class="bi bi-arrow-left-right fs-1 text-dark"></i>
+            </div>
+            <a href="/movimientos" class="small-box-footer d-block text-dark text-decoration-none mt-2 fs-7 text-center">
+                Ver Registro <i class="bi bi-arrow-right-circle-fill ms-1"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Fila Adicional con un Panel de Control Rápido -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card card-primary card-outline shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="card-title m-0 fw-bold text-dark"><i class="bi bi-lightning-charge-fill text-warning me-2"></i>Acceso Directo Administrativo</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-secondary mb-4">Utiliza los siguientes accesos directos para iniciar tareas operativas rápidas en tu inventario:</p>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="/productos" class="btn btn-primary d-flex align-items-center">
+                        <i class="bi bi-plus-circle me-2"></i> Nuevo Producto
+                    </a>
+                    <a href="/categorias" class="btn btn-success d-flex align-items-center">
+                        <i class="bi bi-folder-plus me-2"></i> Nueva Categoría
+                    </a>
+                    <a href="/movimientos" class="btn btn-warning d-flex align-items-center text-dark">
+                        <i class="bi bi-arrow-left-right me-2"></i> Registrar Movimiento
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
