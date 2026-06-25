@@ -3,6 +3,7 @@ using ControlInventario.Data;
 using ControlInventario.Middleware;
 using ControlInventario.Services;
 using Microsoft.EntityFrameworkCore;
+using ControlInventario.Data.Seeders;
 
 var loggerFactory = LoggerFactory.Create(logging =>
 {
@@ -76,5 +77,16 @@ app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
+    using var context = await db.CreateDbContextAsync();
+
+    await context.Database.MigrateAsync();
+
+    await CategoriaSeeder.SeedAsync(context);
+    await ProveedorSeeder.SeedAsync(context);
+}
 
 app.Run();
