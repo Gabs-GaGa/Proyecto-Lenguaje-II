@@ -1,4 +1,5 @@
 using ControlInventario.Components;
+using ControlInventario.Components.Shared;
 using ControlInventario.Data;
 using ControlInventario.Services;
 using Microsoft.EntityFrameworkCore;
@@ -6,8 +7,8 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+builder.Services.AddRazorComponents(options => options.DetailedErrors = true)
+    .AddInteractiveServerComponents(options => options.DetailedErrors = true);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
@@ -21,6 +22,10 @@ builder.Services.AddDbContextFactory<AppDbContext>(options =>
 
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
 builder.Services.AddScoped<IProveedorService, ProveedorService>();
+builder.Services.AddScoped<IProductoService, ProductoService>();
+builder.Services.AddScoped<IMovimientoInventarioService, MovimientoInventarioService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+
 
 var app = builder.Build();
 

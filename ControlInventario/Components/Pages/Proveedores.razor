@@ -1,0 +1,229 @@
+@page "/proveedores"
+@rendermode InteractiveServer
+@inject IProveedorService ProveedorService
+@inject INotificationService _notification
+
+<div>
+<PageTitle>Proveedores - SGI Inventario</PageTitle>
+
+<div class="row">
+    <div class="col-12">
+        <!-- Tarjeta de Gestión de Proveedores (Diseño Premium AdminLTE 4) -->
+        <div class="card card-primary card-outline mb-4 shadow-sm">
+            <div class="card-header d-flex align-items-center justify-content-between py-3 bg-white">
+                <h5 class="card-title m-0 fw-bold text-primary">
+                    <i class="bi bi-truck me-2"></i>Gestión de Proveedores
+                </h5>
+                <button class="btn btn-primary btn-sm d-flex align-items-center fw-semibold px-3" @onclick="OpenCreateModal">
+                    <i class="bi bi-plus-circle me-1.5"></i> Nuevo Proveedor
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <!-- Tabla Responsiva de Proveedores -->
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped align-middle mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width: 80px" class="text-center">ID</th>
+                                <th>Nombre</th>
+                                <th>Teléfono</th>
+                                <th>Email</th>
+                                <th style="width: 150px" class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (ProveedoresList == null)
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-secondary">
+                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                        Cargando proveedores...
+                                    </td>
+                                </tr>
+                            }
+                            else if (!ProveedoresList.Any())
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">
+                                        <i class="bi bi-info-circle me-1"></i> No se encontraron proveedores registrados.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var prov in ProveedoresList)
+                                {
+                                    <tr>
+                                        <td class="text-center fw-semibold">@prov.Id</td>
+                                        <td class="fw-medium text-dark">@prov.Nombre</td>
+                                        <td class="text-secondary">@prov.Telefono</td>
+                                        <td class="text-secondary">@prov.Email</td>
+                                        <td class="text-center">
+                                            <!-- Botones de Acción directos -->
+                                            <button class="btn btn-sm btn-outline-warning me-1" @onclick="() => OpenEditModal(prov)" title="Editar">
+                                                <i class="bi bi-pencil-fill"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDeleteAsync(prov)" title="Eliminar">
+                                                <i class="bi bi-trash-fill"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nativo de Blazor para Crear / Editar Proveedor (Estable y Reutilizable) -->
+<BlazorModal IsOpen="_isModalOpen" OnClose="CloseModal">
+    <EditForm Model="_editingProveedor" OnValidSubmit="SaveAsync">
+        <DataAnnotationsValidator />
+        <div class="mb-3">
+            <label for="nombre" class="form-label fw-semibold text-dark">Nombre <span class="text-danger">*</span></label>
+            <InputText id="nombre" class="form-control" @bind-Value="_editingProveedor.Nombre" placeholder="Ej: Distribuidora Central" required />
+            <ValidationMessage For="@(() => _editingProveedor.Nombre)" />
+        </div>
+        <div class="mb-3">
+            <label for="telefono" class="form-label fw-semibold text-dark">Teléfono</label>
+            <InputText id="telefono" class="form-control" @bind-Value="_editingProveedor.Telefono" placeholder="Ej: +1 (555) 123-4567" />
+            <ValidationMessage For="@(() => _editingProveedor.Telefono)" />
+        </div>
+        <div class="mb-3">
+            <label for="email" class="form-label fw-semibold text-dark">Email</label>
+            <InputText id="email" type="email" class="form-control" @bind-Value="_editingProveedor.Email" placeholder="Ej: contacto@empresa.com" />
+            <ValidationMessage For="@(() => _editingProveedor.Email)" />
+        </div>
+        <div class="d-flex justify-content-end gap-2 border-top pt-3 mt-3">
+            <button type="button" class="btn btn-outline-secondary px-4" @onclick="CloseModal">Cancelar</button>
+            <button type="submit" class="btn btn-primary px-4 fw-semibold">Guardar</button>
+        </div>
+    </EditForm>
+</BlazorModal>
+
+
+<ConfirmDialog @ref="_confirmDialog" />
+<LoadingSpinner IsLoading="_isLoading" />
+</div>
+
+@code {
+    private List<Proveedor> ProveedoresList = new();
+    private Proveedor _editingProveedor = new();
+    private bool _isModalOpen;
+    private bool _isLoading;
+    private ConfirmDialog _confirmDialog = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProveedoresAsync();
+    }
+
+    private async Task LoadProveedoresAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            ProveedoresList = await ProveedorService.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            _notification.ShowError("Error al cargar los proveedores desde la base de datos.");
+            Console.WriteLine("Error al conectar con la BD: " + ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void OpenCreateModal()
+    {
+        _editingProveedor = new Proveedor();
+        _isModalOpen = true;
+        StateHasChanged();
+    }
+
+    private void OpenEditModal(Proveedor proveedor)
+    {
+        // Clonamos la entidad para evitar que se reflejen los cambios temporalmente en pantalla si se cancela
+        _editingProveedor = new Proveedor
+        {
+            Id = proveedor.Id,
+            Nombre = proveedor.Nombre,
+            Telefono = proveedor.Telefono,
+            Email = proveedor.Email
+        };
+        _isModalOpen = true;
+        StateHasChanged();
+    }
+
+    private void CloseModal()
+    {
+        _isModalOpen = false;
+        StateHasChanged();
+    }
+
+    private async Task SaveAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_editingProveedor.Nombre))
+        {
+            _notification.ShowError("El nombre del proveedor es obligatorio.");
+            return;
+        }
+
+        _isModalOpen = false;
+        _isLoading = true;
+
+        try
+        {
+            if (_editingProveedor.Id == 0)
+            {
+                await ProveedorService.AddAsync(_editingProveedor);
+                _notification.ShowSuccess("Proveedor creado con éxito.");
+            }
+            else
+            {
+                await ProveedorService.UpdateAsync(_editingProveedor);
+                _notification.ShowSuccess("Proveedor actualizado con éxito.");
+            }
+            await LoadProveedoresAsync();
+        }
+        catch (Exception ex)
+        {
+            _notification.ShowError("Error al guardar el proveedor.");
+            Console.WriteLine("Error de guardado de proveedor: " + ex.Message);
+            _isModalOpen = true; // Mantiene el modal abierto para no perder los datos del usuario si ocurre un error
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task ConfirmDeleteAsync(Proveedor proveedor)
+    {
+        bool confirmed = await _confirmDialog.ShowAsync("Confirmar", "¿Estás seguro de eliminar este proveedor?");
+        if (confirmed)
+        {
+            _isLoading = true;
+            try
+            {
+                await ProveedorService.DeleteAsync(proveedor.Id);
+                _notification.ShowSuccess("Proveedor eliminado con éxito.");
+                await LoadProveedoresAsync();
+            }
+            catch (Exception ex)
+            {
+                _notification.ShowError("No se puede eliminar el proveedor porque tiene productos asociados.");
+                Console.WriteLine("Error de eliminación de proveedor: " + ex.Message);
+            }
+            finally
+            {
+                _isLoading = false;
+            }
+        }
+    }
+}
