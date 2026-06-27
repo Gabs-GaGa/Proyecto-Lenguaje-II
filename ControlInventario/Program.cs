@@ -89,6 +89,8 @@ using (var scope = app.Services.CreateScope())
 
     await CategoriaSeeder.SeedAsync(context);
     await ProveedorSeeder.SeedAsync(context);
+    await ProductoSeeder.SeedAsync(context);
+    await MovimientoInventarioSeeder.SeedAsync(context);
 }
 
 app.Run();
