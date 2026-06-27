@@ -1,5 +1,11 @@
 @page "/movimientos"
+@rendermode InteractiveServer
+@using ControlInventario.Models.Enums
+@inject IMovimientoInventarioService MovimientoService
+@inject IProductoService ProductoService
+@inject INotificationService _notification
 
+<div>
 <PageTitle>Movimientos - SGI Inventario</PageTitle>
 
 <div class="row">
@@ -10,99 +16,265 @@
                 <h5 class="card-title m-0 fw-bold text-primary">
                     <i class="bi bi-arrow-left-right me-2"></i>Historial de Movimientos
                 </h5>
+                <button class="btn btn-primary btn-sm d-flex align-items-center fw-semibold px-3" @onclick="OpenCreateModal">
+                    <i class="bi bi-plus-circle me-1.5"></i> Nuevo Movimiento
+                </button>
             </div>
             <div class="card-body p-0">
                 <!-- Tabla Responsiva de Movimientos -->
-                <table class="table table-bordered table-striped align-middle mb-0">
-                    <thead class="table-dark">
-                        <tr>
-                            <th style="width: 80px" class="text-center">ID</th>
-                            <th>Producto</th>
-                            <th class="text-center" style="width: 140px">Tipo</th>
-                            <th class="text-center" style="width: 100px">Cantidad</th>
-                            <th>Fecha</th>
-                            <th>Motivo</th>
-                            <th style="width: 150px" class="text-center">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (MovimientosList == null)
-                        {
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped align-middle mb-0">
+                        <thead class="table-dark">
                             <tr>
-                                <td colspan="7" class="text-center py-4 text-secondary">
-                                    <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
-                                    Cargando movimientos...
-                                </td>
+                                <th style="width: 80px" class="text-center">ID</th>
+                                <th>Producto</th>
+                                <th class="text-center" style="width: 140px">Tipo</th>
+                                <th class="text-center" style="width: 100px">Cantidad</th>
+                                <th>Fecha</th>
+                                <th>Motivo</th>
+                                <th style="width: 100px" class="text-center">Acciones</th>
                             </tr>
-                        }
-                        else if (!MovimientosList.Any())
-                        {
-                            <tr>
-                                <td colspan="7" class="text-center py-4 text-muted">
-                                    <i class="bi bi-info-circle me-1"></i> No se encontraron movimientos registrados.
-                                </td>
-                            </tr>
-                        }
-                        else
-                        {
-                            @foreach (var mov in MovimientosList)
+                        </thead>
+                        <tbody>
+                            @if (MovimientosList == null)
                             {
                                 <tr>
-                                    <td class="text-center fw-semibold">@mov.Id</td>
-                                    <td class="fw-medium text-dark">@mov.Producto</td>
-                                    <td class="text-center">
-                                        <span class="badge @GetTipoBadgeClass(mov.Tipo) px-2.5 py-1.5 fs-7">
-                                            @mov.Tipo
-                                        </span>
-                                    </td>
-                                    <td class="text-center fw-bold text-dark">@mov.Cantidad</td>
-                                    <td class="text-secondary">@mov.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
-                                    <td class="text-secondary text-truncate" style="max-width: 250px;">@mov.Motivo</td>
-                                    <td class="text-center">
-                                        <!-- Botones de Acción -->
-                                        <button class="btn btn-sm btn-outline-warning me-1" @onclick='() => Console.WriteLine("Editar Movimiento: " + mov.Id)' title="Editar">
-                                            <i class="bi bi-pencil-fill"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-danger" @onclick='() => Console.WriteLine("Eliminar Movimiento: " + mov.Id)' title="Eliminar">
-                                            <i class="bi bi-trash-fill"></i>
-                                        </button>
+                                    <td colspan="7" class="text-center py-4 text-secondary">
+                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                        Cargando movimientos...
                                     </td>
                                 </tr>
                             }
-                        }
-                    </tbody>
-                </table>
+                            else if (!MovimientosList.Any())
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">
+                                        <i class="bi bi-info-circle me-1"></i> No se encontraron movimientos registrados.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var mov in MovimientosList)
+                                {
+                                    <tr>
+                                        <td class="text-center fw-semibold">@mov.Id</td>
+                                        <td class="fw-medium text-dark">@(mov.Producto?.Nombre ?? "Producto no encontrado")</td>
+                                        <td class="text-center">
+                                            <span class="badge @GetTipoBadgeClass(mov.Tipo) px-2.5 py-1.5 fs-7">
+                                                @mov.Tipo
+                                            </span>
+                                        </td>
+                                        <td class="text-center fw-bold text-dark">@mov.Cantidad</td>
+                                        <td class="text-secondary">@mov.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td class="text-secondary text-truncate" style="max-width: 250px;">@mov.Motivo</td>
+                                        <td class="text-center">
+                                            <!-- Botón de Acción directo (Solo eliminar con confirmación) -->
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDeleteAsync(mov)" title="Eliminar">
+                                                <i class="bi bi-trash-fill"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-@code {
-    private List<MovimientoDto> MovimientosList = new()
-    {
-        new MovimientoDto { Id = 1, Producto = "Laptop Dell Inspiron 15", Tipo = "Entrada", Cantidad = 10, Fecha = DateTime.Now.AddHours(-2), Motivo = "Recepción de compra inicial de lote" },
-        new MovimientoDto { Id = 2, Producto = "Mouse Inalámbrico Logitech M185", Tipo = "Salida", Cantidad = 2, Fecha = DateTime.Now.AddHours(-1), Motivo = "Venta directa a cliente en tienda" },
-        new MovimientoDto { Id = 3, Producto = "Teclado Mecánico RGB Redragon", Tipo = "Ajuste", Cantidad = -1, Fecha = DateTime.Now.AddMinutes(-15), Motivo = "Corrección por inventario físico dañado" }
-    };
+<!-- Modal Nativo de Blazor para Crear Movimiento -->
+<BlazorModal IsOpen="_isModalOpen" OnClose="CloseModal">
+    <EditForm Model="_editingMovimiento" OnValidSubmit="SaveAsync">
+        <DataAnnotationsValidator />
+        
+        <div class="mb-3">
+            <label for="producto" class="form-label fw-semibold text-dark">Producto <span class="text-danger">*</span></label>
+            <InputSelect id="producto" class="form-select" @bind-Value="_editingMovimiento.ProductoId" required>
+                <option value="0">-- Seleccione un producto --</option>
+                @foreach (var prod in ProductosList)
+                {
+                    <option value="@prod.Id">@prod.Nombre (@prod.CodigoSku) - Stock: @prod.StockActual</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => _editingMovimiento.ProductoId)" />
+        </div>
 
-    private string GetTipoBadgeClass(string tipo)
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="tipo" class="form-label fw-semibold text-dark">Tipo Movimiento <span class="text-danger">*</span></label>
+                <InputSelect id="tipo" class="form-select" @bind-Value="_editingMovimiento.Tipo" required>
+                    @foreach (var tipo in Enum.GetValues<TipoMovimiento>())
+                    {
+                        <option value="@tipo">@tipo.ToString()</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="@(() => _editingMovimiento.Tipo)" />
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="cantidad" class="form-label fw-semibold text-dark">Cantidad <span class="text-danger">*</span></label>
+                <InputNumber id="cantidad" class="form-control" @bind-Value="_editingMovimiento.Cantidad" required min="1" />
+                <ValidationMessage For="@(() => _editingMovimiento.Cantidad)" />
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="motivo" class="form-label fw-semibold text-dark">Motivo</label>
+            <InputText id="motivo" class="form-control" @bind-Value="_editingMovimiento.Motivo" placeholder="Ej: Ajuste anual, compra inicial, etc." />
+            <ValidationMessage For="@(() => _editingMovimiento.Motivo)" />
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 border-top pt-3 mt-3">
+            <button type="button" class="btn btn-outline-secondary px-4" @onclick="CloseModal">Cancelar</button>
+            <button type="submit" class="btn btn-primary px-4 fw-semibold">Guardar</button>
+        </div>
+    </EditForm>
+</BlazorModal>
+
+<ConfirmDialog @ref="_confirmDialog" />
+<LoadingSpinner IsLoading="_isLoading" />
+</div>
+
+@code {
+    private List<MovimientoInventario> MovimientosList = new();
+    private List<Producto> ProductosList = new();
+    private MovimientoInventario _editingMovimiento = new();
+    private bool _isModalOpen;
+    private bool _isLoading;
+    private ConfirmDialog _confirmDialog = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            var rawMovimientos = await MovimientoService.GetAllAsync();
+            // Ordenar por Fecha descendente
+            MovimientosList = rawMovimientos.OrderByDescending(m => m.Fecha).ToList();
+            ProductosList = await ProductoService.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            _notification.ShowError("Error al cargar los movimientos desde la base de datos.");
+            Console.WriteLine("Error al conectar con la BD: " + ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task OpenCreateModal()
+    {
+        _editingMovimiento = new MovimientoInventario { Tipo = TipoMovimiento.Entrada };
+        if (ProductosList == null || !ProductosList.Any())
+        {
+            await LoadProductsAsync();
+        }
+        _isModalOpen = true;
+        StateHasChanged();
+    }
+
+    private async Task LoadProductsAsync()
+    {
+        try
+        {
+            ProductosList = await ProductoService.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error al cargar productos en movimientos: " + ex.Message);
+        }
+    }
+
+    private void CloseModal()
+    {
+        _isModalOpen = false;
+        StateHasChanged();
+    }
+
+    private string GetTipoBadgeClass(TipoMovimiento tipo)
     {
         return tipo switch
         {
-            "Entrada" => "bg-success",
-            "Salida" => "bg-danger",
-            "Ajuste" => "bg-warning text-dark",
+            TipoMovimiento.Entrada => "bg-success",
+            TipoMovimiento.Salida => "bg-danger",
+            TipoMovimiento.Ajuste => "bg-warning text-dark",
             _ => "bg-secondary"
         };
     }
 
-    public class MovimientoDto
+    private async Task SaveAsync()
     {
-        public int Id { get; set; }
-        public string Producto { get; set; } = string.Empty;
-        public string Tipo { get; set; } = string.Empty; // Entrada, Salida, Ajuste
-        public int Cantidad { get; set; }
-        public DateTime Fecha { get; set; }
-        public string Motivo { get; set; } = string.Empty;
+        if (_editingMovimiento.ProductoId == 0)
+        {
+            _notification.ShowError("Debe seleccionar un producto.");
+            return;
+        }
+        if (_editingMovimiento.Cantidad <= 0)
+        {
+            _notification.ShowError("La cantidad debe ser mayor a cero.");
+            return;
+        }
+
+        _isModalOpen = false;
+        _isLoading = true;
+
+        try
+        {
+            // Validar stock insuficiente antes de enviar si es salida
+            var prod = ProductosList.FirstOrDefault(p => p.Id == _editingMovimiento.ProductoId);
+            if (prod != null && _editingMovimiento.Tipo == TipoMovimiento.Salida && prod.StockActual < _editingMovimiento.Cantidad)
+            {
+                _notification.ShowError($"Stock insuficiente. Disponible: {prod.StockActual}, solicitado: {_editingMovimiento.Cantidad}.");
+                _isModalOpen = true;
+                return;
+            }
+
+            await MovimientoService.AddAsync(_editingMovimiento);
+            _notification.ShowSuccess("Movimiento registrado con éxito.");
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            _notification.ShowError("Error al registrar el movimiento: " + ex.Message);
+            Console.WriteLine("Error de guardado de movimiento: " + ex.Message);
+            _isModalOpen = true;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task ConfirmDeleteAsync(MovimientoInventario movimiento)
+    {
+        bool confirmed = await _confirmDialog.ShowAsync("Confirmar", $"¿Estás seguro de eliminar el movimiento ID {movimiento.Id}?");
+        if (confirmed)
+        {
+            _isLoading = true;
+            try
+            {
+                await MovimientoService.DeleteAsync(movimiento.Id);
+                _notification.ShowSuccess("Movimiento eliminado con éxito.");
+                await LoadDataAsync();
+            }
+            catch (Exception ex)
+            {
+                _notification.ShowError("Error al eliminar el movimiento.");
+                Console.WriteLine("Error de eliminación de movimiento: " + ex.Message);
+            }
+            finally
+            {
+                _isLoading = false;
+            }
+        }
     }
 }

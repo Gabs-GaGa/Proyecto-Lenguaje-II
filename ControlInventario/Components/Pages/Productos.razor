@@ -1,5 +1,11 @@
 @page "/productos"
+@rendermode InteractiveServer
+@inject IProductoService ProductoService
+@inject ICategoriaService CategoriaService
+@inject IProveedorService ProveedorService
+@inject INotificationService _notification
 
+<div>
 <PageTitle>Productos - SGI Inventario</PageTitle>
 
 <div class="row">
@@ -10,88 +16,330 @@
                 <h5 class="card-title m-0 fw-bold text-primary">
                     <i class="bi bi-box-seam me-2"></i>Gestión de Productos
                 </h5>
+                <button class="btn btn-primary btn-sm d-flex align-items-center fw-semibold px-3" @onclick="OpenCreateModal">
+                    <i class="bi bi-plus-circle me-1.5"></i> Nuevo Producto
+                </button>
             </div>
             <div class="card-body p-0">
                 <!-- Tabla Responsiva de Productos -->
-                <table class="table table-bordered table-striped align-middle mb-0">
-                    <thead class="table-dark">
-                        <tr>
-                            <th style="width: 80px" class="text-center">ID</th>
-                            <th>Código SKU</th>
-                            <th>Nombre</th>
-                            <th class="text-end">Precio Venta</th>
-                            <th class="text-center">Stock Actual</th>
-                            <th>Categoría</th>
-                            <th style="width: 150px" class="text-center">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (ProductosList == null)
-                        {
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped align-middle mb-0">
+                        <thead class="table-dark">
                             <tr>
-                                <td colspan="7" class="text-center py-4 text-secondary">
-                                    <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
-                                    Cargando productos...
-                                </td>
+                                <th style="width: 80px" class="text-center">ID</th>
+                                <th>Código SKU</th>
+                                <th>Nombre</th>
+                                <th class="text-end">Precio Venta</th>
+                                <th class="text-center">Stock Actual</th>
+                                <th>Categoría</th>
+                                <th style="width: 150px" class="text-center">Acciones</th>
                             </tr>
-                        }
-                        else if (!ProductosList.Any())
-                        {
-                            <tr>
-                                <td colspan="7" class="text-center py-4 text-muted">
-                                    <i class="bi bi-info-circle me-1"></i> No se encontraron productos registrados.
-                                </td>
-                            </tr>
-                        }
-                        else
-                        {
-                            @foreach (var prod in ProductosList)
+                        </thead>
+                        <tbody>
+                            @if (ProductosList == null)
                             {
                                 <tr>
-                                    <td class="text-center fw-semibold">@prod.Id</td>
-                                    <td class="fw-mono text-dark">@prod.Sku</td>
-                                    <td class="fw-medium text-dark">@prod.Nombre</td>
-                                    <td class="text-end fw-semibold text-secondary">@prod.PrecioVenta.ToString("C2")</td>
-                                    <td class="text-center">
-                                        <span class="badge @(prod.StockActual <= 5 ? "bg-danger" : "bg-success") px-2 py-1.5 fs-7">
-                                            @prod.StockActual
-                                        </span>
-                                    </td>
-                                    <td class="text-secondary">@prod.Categoria</td>
-                                    <td class="text-center">
-                                        <!-- Botones de Acción -->
-                                        <button class="btn btn-sm btn-outline-warning me-1" @onclick='() => Console.WriteLine("Editar Producto: " + prod.Id)' title="Editar">
-                                            <i class="bi bi-pencil-fill"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-danger" @onclick='() => Console.WriteLine("Eliminar Producto: " + prod.Id)' title="Eliminar">
-                                            <i class="bi bi-trash-fill"></i>
-                                        </button>
+                                    <td colspan="7" class="text-center py-4 text-secondary">
+                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                        Cargando productos...
                                     </td>
                                 </tr>
                             }
-                        }
-                    </tbody>
-                </table>
+                            else if (!ProductosList.Any())
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">
+                                        <i class="bi bi-info-circle me-1"></i> No se encontraron productos registrados.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var prod in ProductosList)
+                                {
+                                    <tr>
+                                        <td class="text-center fw-semibold">@prod.Id</td>
+                                        <td class="fw-mono text-dark">@prod.CodigoSku</td>
+                                        <td class="fw-medium text-dark">@prod.Nombre</td>
+                                        <td class="text-end fw-semibold text-secondary">@prod.PrecioVenta.ToString("C2")</td>
+                                        <td class="text-center">
+                                            <span class="badge @(prod.StockActual <= prod.StockMinimo ? "bg-danger" : "bg-success") px-2 py-1.5 fs-7">
+                                                @prod.StockActual
+                                            </span>
+                                        </td>
+                                        <td class="text-secondary">@(prod.Categoria?.Nombre ?? "Sin categoría")</td>
+                                        <td class="text-center">
+                                            <!-- Botones de Acción directos -->
+                                            <button class="btn btn-sm btn-outline-warning me-1" @onclick="() => OpenEditModal(prod)" title="Editar">
+                                                <i class="bi bi-pencil-fill"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDeleteAsync(prod)" title="Eliminar">
+                                                <i class="bi bi-trash-fill"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-@code {
-    private List<ProductoDto> ProductosList = new()
-    {
-        new ProductoDto { Id = 1, Sku = "LAP-DELL-15", Nombre = "Laptop Dell Inspiron 15", PrecioVenta = 749.99m, StockActual = 12, Categoria = "Tecnología" },
-        new ProductoDto { Id = 2, Sku = "MOU-LOGI-M1", Nombre = "Mouse Inalámbrico Logitech M185", PrecioVenta = 19.99m, StockActual = 4, Categoria = "Accesorios" },
-        new ProductoDto { Id = 3, Sku = "KEY-MECH-RGB", Nombre = "Teclado Mecánico RGB Redragon", PrecioVenta = 49.50m, StockActual = 25, Categoria = "Accesorios" }
-    };
+<!-- Modal Nativo de Blazor para Crear / Editar Producto -->
+<BlazorModal IsOpen="_isModalOpen" OnClose="CloseModal">
+    <EditForm Model="_editingProducto" OnValidSubmit="SaveAsync">
+        <DataAnnotationsValidator />
+        
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="sku" class="form-label fw-semibold text-dark">Código SKU <span class="text-danger">*</span></label>
+                <InputText id="sku" class="form-control" @bind-Value="_editingProducto.CodigoSku" placeholder="Ej: LAP-DELL-15" required />
+                <ValidationMessage For="@(() => _editingProducto.CodigoSku)" />
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="nombre" class="form-label fw-semibold text-dark">Nombre <span class="text-danger">*</span></label>
+                <InputText id="nombre" class="form-control" @bind-Value="_editingProducto.Nombre" placeholder="Ej: Laptop Dell Inspiron 15" required />
+                <ValidationMessage For="@(() => _editingProducto.Nombre)" />
+            </div>
+        </div>
 
-    public class ProductoDto
+        <div class="mb-3">
+            <label for="descripcion" class="form-label fw-semibold text-dark">Descripción</label>
+            <InputText id="descripcion" class="form-control" @bind-Value="_editingProducto.Descripcion" placeholder="Descripción opcional..." />
+            <ValidationMessage For="@(() => _editingProducto.Descripcion)" />
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="precioCompra" class="form-label fw-semibold text-dark">Precio Compra <span class="text-danger">*</span></label>
+                <InputNumber id="precioCompra" class="form-control" @bind-Value="_editingProducto.PrecioCompra" required min="0.01" step="0.01" />
+                <ValidationMessage For="@(() => _editingProducto.PrecioCompra)" />
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="precioVenta" class="form-label fw-semibold text-dark">Precio Venta <span class="text-danger">*</span></label>
+                <InputNumber id="precioVenta" class="form-control" @bind-Value="_editingProducto.PrecioVenta" required min="0.01" step="0.01" />
+                <ValidationMessage For="@(() => _editingProducto.PrecioVenta)" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="stockActual" class="form-label fw-semibold text-dark">Stock Actual <span class="text-danger">*</span></label>
+                <InputNumber id="stockActual" class="form-control" @bind-Value="_editingProducto.StockActual" required min="0" />
+                <ValidationMessage For="@(() => _editingProducto.StockActual)" />
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="stockMinimo" class="form-label fw-semibold text-dark">Stock Mínimo <span class="text-danger">*</span></label>
+                <InputNumber id="stockMinimo" class="form-control" @bind-Value="_editingProducto.StockMinimo" required min="0" />
+                <ValidationMessage For="@(() => _editingProducto.StockMinimo)" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="categoria" class="form-label fw-semibold text-dark">Categoría <span class="text-danger">*</span></label>
+                <InputSelect id="categoria" class="form-select" @bind-Value="_editingProducto.CategoriaId" required>
+                    <option value="0">-- Seleccione --</option>
+                    @foreach (var cat in CategoriasList)
+                    {
+                        <option value="@cat.Id">@cat.Nombre</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="@(() => _editingProducto.CategoriaId)" />
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="proveedor" class="form-label fw-semibold text-dark">Proveedor</label>
+                <InputSelect id="proveedor" class="form-select" @bind-Value="_editingProducto.ProveedorId">
+                    <option value="">Sin proveedor</option>
+                    @foreach (var prov in ProveedoresList)
+                    {
+                        <option value="@prov.Id">@prov.Nombre</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="@(() => _editingProducto.ProveedorId)" />
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 border-top pt-3 mt-3">
+            <button type="button" class="btn btn-outline-secondary px-4" @onclick="CloseModal">Cancelar</button>
+            <button type="submit" class="btn btn-primary px-4 fw-semibold">Guardar</button>
+        </div>
+    </EditForm>
+</BlazorModal>
+
+<ConfirmDialog @ref="_confirmDialog" />
+<LoadingSpinner IsLoading="_isLoading" />
+</div>
+
+@code {
+    private List<Producto> ProductosList = new();
+    private List<Categoria> CategoriasList = new();
+    private List<Proveedor> ProveedoresList = new();
+    private Producto _editingProducto = new();
+    private bool _isModalOpen;
+    private bool _isLoading;
+    private ConfirmDialog _confirmDialog = null!;
+
+    protected override async Task OnInitializedAsync()
     {
-        public int Id { get; set; }
-        public string Sku { get; set; } = string.Empty;
-        public string Nombre { get; set; } = string.Empty;
-        public decimal PrecioVenta { get; set; }
-        public int StockActual { get; set; }
-        public string Categoria { get; set; } = string.Empty;
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            ProductosList = await ProductoService.GetAllAsync();
+            CategoriasList = await CategoriaService.GetAllAsync();
+            ProveedoresList = await ProveedorService.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            _notification.ShowError("Error al cargar los productos desde la base de datos.");
+            Console.WriteLine("Error al conectar con la BD: " + ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task OpenCreateModal()
+    {
+        _editingProducto = new Producto();
+        if (CategoriasList == null || !CategoriasList.Any() || ProveedoresList == null || !ProveedoresList.Any())
+        {
+            await LoadDropdownsAsync();
+        }
+        _isModalOpen = true;
+        StateHasChanged();
+    }
+
+    private async Task OpenEditModal(Producto producto)
+    {
+        // Clonación para edición segura
+        _editingProducto = new Producto
+        {
+            Id = producto.Id,
+            CodigoSku = producto.CodigoSku,
+            Nombre = producto.Nombre,
+            Descripcion = producto.Descripcion,
+            PrecioCompra = producto.PrecioCompra,
+            PrecioVenta = producto.PrecioVenta,
+            StockActual = producto.StockActual,
+            StockMinimo = producto.StockMinimo,
+            CategoriaId = producto.CategoriaId,
+            ProveedorId = producto.ProveedorId
+        };
+        if (CategoriasList == null || !CategoriasList.Any() || ProveedoresList == null || !ProveedoresList.Any())
+        {
+            await LoadDropdownsAsync();
+        }
+        _isModalOpen = true;
+        StateHasChanged();
+    }
+
+    private async Task LoadDropdownsAsync()
+    {
+        try
+        {
+            CategoriasList = await CategoriaService.GetAllAsync();
+            ProveedoresList = await ProveedorService.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error al cargar dropdowns de productos: " + ex.Message);
+        }
+    }
+
+    private void CloseModal()
+    {
+        _isModalOpen = false;
+        StateHasChanged();
+    }
+
+    private async Task SaveAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_editingProducto.Nombre))
+        {
+            _notification.ShowError("El nombre del producto es obligatorio.");
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(_editingProducto.CodigoSku))
+        {
+            _notification.ShowError("El código SKU es obligatorio.");
+            return;
+        }
+        if (_editingProducto.PrecioCompra <= 0 || _editingProducto.PrecioVenta <= 0)
+        {
+            _notification.ShowError("Los precios deben ser mayores que cero.");
+            return;
+        }
+        if (_editingProducto.StockActual < 0 || _editingProducto.StockMinimo < 0)
+        {
+            _notification.ShowError("Los stocks no pueden ser negativos.");
+            return;
+        }
+        if (_editingProducto.CategoriaId == 0)
+        {
+            _notification.ShowError("Debe seleccionar una categoría obligatoriamente.");
+            return;
+        }
+
+        _isModalOpen = false;
+        _isLoading = true;
+
+        try
+        {
+            if (_editingProducto.Id == 0)
+            {
+                await ProductoService.AddAsync(_editingProducto);
+                _notification.ShowSuccess("Producto creado con éxito.");
+            }
+            else
+            {
+                await ProductoService.UpdateAsync(_editingProducto);
+                _notification.ShowSuccess("Producto actualizado con éxito.");
+            }
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            _notification.ShowError("Error al guardar el producto.");
+            Console.WriteLine("Error de guardado de producto: " + ex.Message);
+            _isModalOpen = true; // Mantener abierto
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task ConfirmDeleteAsync(Producto producto)
+    {
+        bool confirmed = await _confirmDialog.ShowAsync("Confirmar", $"¿Estás seguro de eliminar el producto '{producto.Nombre}'?");
+        if (confirmed)
+        {
+            _isLoading = true;
+            try
+            {
+                await ProductoService.DeleteAsync(producto.Id);
+                _notification.ShowSuccess("Producto eliminado con éxito.");
+                await LoadDataAsync();
+            }
+            catch (Exception ex)
+            {
+                _notification.ShowError("No se puede eliminar el producto porque tiene movimientos de inventario asociados.");
+                Console.WriteLine("Error de eliminación de producto: " + ex.Message);
+            }
+            finally
+            {
+                _isLoading = false;
+            }
+        }
     }
 }

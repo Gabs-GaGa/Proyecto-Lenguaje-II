@@ -1,5 +1,9 @@
 @page "/categorias"
+@rendermode InteractiveServer
+@inject ICategoriaService CategoriaService
+@inject INotificationService _notification
 
+<div>
 <PageTitle>Categorías - SGI Inventario</PageTitle>
 
 <div class="row">
@@ -10,75 +14,209 @@
                 <h5 class="card-title m-0 fw-bold text-primary">
                     <i class="bi bi-tags me-2"></i>Gestión de Categorías
                 </h5>
+                <button class="btn btn-primary btn-sm d-flex align-items-center fw-semibold px-3" @onclick="OpenCreateModal">
+                    <i class="bi bi-plus-circle me-1.5"></i> Nueva Categoría
+                </button>
             </div>
             <div class="card-body p-0">
                 <!-- Tabla Responsiva de Categorías -->
-                <table class="table table-bordered table-striped align-middle mb-0">
-                    <thead class="table-dark">
-                        <tr>
-                            <th style="width: 80px" class="text-center">ID</th>
-                            <th>Nombre</th>
-                            <th>Descripción</th>
-                            <th style="width: 150px" class="text-center">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (CategoriasList == null)
-                        {
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped align-middle mb-0">
+                        <thead class="table-dark">
                             <tr>
-                                <td colspan="4" class="text-center py-4 text-secondary">
-                                    <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
-                                    Cargando categorías...
-                                </td>
+                                <th style="width: 80px" class="text-center">ID</th>
+                                <th>Nombre</th>
+                                <th>Descripción</th>
+                                <th style="width: 150px" class="text-center">Acciones</th>
                             </tr>
-                        }
-                        else if (!CategoriasList.Any())
-                        {
-                            <tr>
-                                <td colspan="4" class="text-center py-4 text-muted">
-                                    <i class="bi bi-info-circle me-1"></i> No se encontraron categorías registradas.
-                                </td>
-                            </tr>
-                        }
-                        else
-                        {
-                            @foreach (var cat in CategoriasList)
+                        </thead>
+                        <tbody>
+                            @if (CategoriasList == null)
                             {
                                 <tr>
-                                    <td class="text-center fw-semibold">@cat.Id</td>
-                                    <td class="fw-medium text-dark">@cat.Nombre</td>
-                                    <td class="text-secondary">@cat.Descripcion</td>
-                                    <td class="text-center">
-                                        <!-- Botones de Acción directos -->
-                                        <button class="btn btn-sm btn-outline-warning me-1" @onclick='() => Console.WriteLine("Editar Categoría: " + cat.Id)' title="Editar">
-                                            <i class="bi bi-pencil-fill"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-danger" @onclick='() => Console.WriteLine("Eliminar Categoría: " + cat.Id)' title="Eliminar">
-                                            <i class="bi bi-trash-fill"></i>
-                                        </button>
+                                    <td colspan="4" class="text-center py-4 text-secondary">
+                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                        Cargando categorías...
                                     </td>
                                 </tr>
                             }
-                        }
-                    </tbody>
-                </table>
+                            else if (!CategoriasList.Any())
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">
+                                        <i class="bi bi-info-circle me-1"></i> No se encontraron categorías registradas.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var cat in CategoriasList)
+                                {
+                                    <tr>
+                                        <td class="text-center fw-semibold">@cat.Id</td>
+                                        <td class="fw-medium text-dark">@cat.Nombre</td>
+                                        <td class="text-secondary">@cat.Descripcion</td>
+                                        <td class="text-center">
+                                            <!-- Botones de Acción directos -->
+                                            <button class="btn btn-sm btn-outline-warning me-1" @onclick="() => OpenEditModal(cat)" title="Editar">
+                                                <i class="bi bi-pencil-fill"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDeleteAsync(cat)" title="Eliminar">
+                                                <i class="bi bi-trash-fill"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-@code {
-    private List<CategoriaDto> CategoriasList = new()
-    {
-        new CategoriaDto { Id = 1, Nombre = "Electrónicos", Descripcion = "Productos tecnológicos y de computación" },
-        new CategoriaDto { Id = 2, Nombre = "Oficina", Descripcion = "Artículos de papelería, escritorios y organización" },
-        new CategoriaDto { Id = 3, Nombre = "Hogar", Descripcion = "Muebles, decoración y productos para el hogar" }
-    };
+<!-- Modal Nativo de Blazor para Crear / Editar Categoría (Estable y Reutilizable) -->
+<BlazorModal IsOpen="_isModalOpen" OnClose="CloseModal">
+    <EditForm Model="_editingCategoria" OnValidSubmit="SaveAsync">
+        <DataAnnotationsValidator />
+        <div class="mb-3">
+            <label for="nombre" class="form-label fw-semibold text-dark">Nombre <span class="text-danger">*</span></label>
+            <InputText id="nombre" class="form-control" @bind-Value="_editingCategoria.Nombre" placeholder="Ej: Electrónicos" required />
+            <ValidationMessage For="@(() => _editingCategoria.Nombre)" />
+        </div>
+        <div class="mb-3">
+            <label for="descripcion" class="form-label fw-semibold text-dark">Descripción</label>
+            <InputTextArea id="descripcion" class="form-control" rows="3" @bind-Value="_editingCategoria.Descripcion" placeholder="Descripción de la categoría (opcional)..." />
+            <ValidationMessage For="@(() => _editingCategoria.Descripcion)" />
+        </div>
+        <div class="d-flex justify-content-end gap-2 border-top pt-3 mt-3">
+            <button type="button" class="btn btn-outline-secondary px-4" @onclick="CloseModal">Cancelar</button>
+            <button type="submit" class="btn btn-primary px-4 fw-semibold">Guardar</button>
+        </div>
+    </EditForm>
+</BlazorModal>
 
-    public class CategoriaDto
+
+<ConfirmDialog @ref="_confirmDialog" />
+<LoadingSpinner IsLoading="_isLoading" />
+</div>
+
+@code {
+    private List<Categoria> CategoriasList = new();
+    private Categoria _editingCategoria = new();
+    private bool _isModalOpen;
+    private bool _isLoading;
+    private ConfirmDialog _confirmDialog = null!;
+
+    protected override async Task OnInitializedAsync()
     {
-        public int Id { get; set; }
-        public string Nombre { get; set; } = string.Empty;
-        public string Descripcion { get; set; } = string.Empty;
+        await LoadCategoriasAsync();
+    }
+
+    private async Task LoadCategoriasAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            CategoriasList = await CategoriaService.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            _notification.ShowError("Error al cargar las categorías desde la base de datos.");
+            Console.WriteLine("Error al conectar con la BD: " + ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void OpenCreateModal()
+    {
+        _editingCategoria = new Categoria();
+        _isModalOpen = true;
+        StateHasChanged();
+    }
+
+    private void OpenEditModal(Categoria categoria)
+    {
+        // Clonamos la entidad para evitar que se reflejen los cambios temporalmente en pantalla si se cancela
+        _editingCategoria = new Categoria
+        {
+            Id = categoria.Id,
+            Nombre = categoria.Nombre,
+            Descripcion = categoria.Descripcion
+        };
+        _isModalOpen = true;
+        StateHasChanged();
+    }
+
+    private void CloseModal()
+    {
+        _isModalOpen = false;
+        StateHasChanged();
+    }
+
+    private async Task SaveAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_editingCategoria.Nombre))
+        {
+            _notification.ShowError("El nombre de la categoría es obligatorio.");
+            return;
+        }
+
+        _isModalOpen = false;
+        _isLoading = true;
+
+        try
+        {
+            if (_editingCategoria.Id == 0)
+            {
+                await CategoriaService.AddAsync(_editingCategoria);
+                _notification.ShowSuccess("Categoría creada con éxito.");
+            }
+            else
+            {
+                await CategoriaService.UpdateAsync(_editingCategoria);
+                _notification.ShowSuccess("Categoría actualizada con éxito.");
+            }
+            await LoadCategoriasAsync();
+        }
+        catch (Exception ex)
+        {
+            _notification.ShowError("Error al guardar la categoría.");
+            Console.WriteLine("Error de guardado: " + ex.Message);
+            _isModalOpen = true; // Mantiene el modal abierto para no perder los datos del usuario si ocurre un error
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task ConfirmDeleteAsync(Categoria categoria)
+    {
+        bool confirmed = await _confirmDialog.ShowAsync("Confirmar", "¿Estás seguro de eliminar esta categoría?");
+        if (confirmed)
+        {
+            _isLoading = true;
+            try
+            {
+                await CategoriaService.DeleteAsync(categoria.Id);
+                _notification.ShowSuccess("Categoría eliminada con éxito.");
+                await LoadCategoriasAsync();
+            }
+            catch (Exception ex)
+            {
+                // Error recurrente si la tabla productos tiene restricciones FK activas con esta categoría
+                _notification.ShowError("No se puede eliminar la categoría porque tiene productos asociados.");
+                Console.WriteLine("Error de eliminación: " + ex.Message);
+            }
+            finally
+            {
+                _isLoading = false;
+            }
+        }
     }
 }

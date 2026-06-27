@@ -1,0 +1,45 @@
+@inject INotificationService NotificationService
+@implements IDisposable
+
+@if (NotificationService.IsVisible)
+{
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 9999; min-width: 300px; max-width: 450px;">
+        <div class="alert alert-@NotificationService.Type alert-dismissible fade show shadow-lg border-0" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi @GetIconClass(NotificationService.Type) fs-4 me-2"></i>
+                <div class="fw-medium">
+                    @NotificationService.Message
+                </div>
+            </div>
+            <button type="button" class="btn-close" @onclick="NotificationService.Hide" aria-label="Close"></button>
+        </div>
+    </div>
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        NotificationService.OnShow += OnNotificationShow;
+    }
+
+    private async void OnNotificationShow()
+    {
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private string GetIconClass(string type)
+    {
+        return type switch
+        {
+            "success" => "bi-check-circle-fill",
+            "danger" => "bi-exclamation-triangle-fill",
+            "warning" => "bi-exclamation-circle-fill",
+            _ => "bi-info-circle-fill"
+        };
+    }
+
+    public void Dispose()
+    {
+        NotificationService.OnShow -= OnNotificationShow;
+    }
+}
